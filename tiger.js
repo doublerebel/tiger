@@ -33,6 +33,7 @@
         if (source) for (var key in source) target[key] = source[key];
         return target;
     };
+    // Haven't been able to get a working deep extend yet... Probably needs to be flattened somehow
     //var TiExtend = Tiger.extend = function() {
     //    var deep,
     //        i = 1,
