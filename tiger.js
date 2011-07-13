@@ -213,8 +213,8 @@
         init: function(props) {
             var win = this._init(props);
             win.tiBind('android:back', function() {
-                for (var w = win.element, i = w.children.length - 1; i > -1; i--)
-                    w.remove(w.children[i]);
+                for (var w = win.element, c = w.children, i = c.length - 1; i > -1; i--)
+                    w.remove(c[i]);
                 setTimeout(function() { w.close(); }, 70);
             });
             return win;
