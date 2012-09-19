@@ -31,10 +31,11 @@ logLevels = ['info', 'warn', 'error', 'debug', 'trace']
 
 Log = extend {}, Spine.Log,
   logLevel: false
+  stackTraceLimit: 10
   
   log: (args...) ->
     return unless @trace
-    level = args[0] in logLevels && args.shift()
+    level = args[0] in logLevels and args.shift()
     level = @logLevel or level or 'info'
     prefix = @logPrefix and @logPrefix + ' ' or ''
     for obj in args
@@ -42,12 +43,105 @@ Log = extend {}, Spine.Log,
       else Ti.API.log level, prefix + "#{key}: #{val}" for key, val of obj
     @
 
+  stackTrace: ->
+    err = new Error
+    Error.stackTraceLimit = @stackTraceLimit
+    Error.prepareStackTrace = (err, stack) -> stack
+    Error.captureStackTrace err, arguments.callee
+    for frame in err.stack
+      Log.debug "(trace) #{frame.getFileName()}:#{frame.getLineNumber()} - #{frame.getFunctionName()}"
+
 for level in logLevels
   ((level) ->
     Log[level] = (args...) ->
       args.unshift(level)
       Log.log.apply(@, args)
   )(level)
+
+
+class Ajax extends Module
+  @include Log
+  logPrefix: '(Ajax)'
+
+  defaults:
+    method: 'GET'
+    url: null
+    data: false
+    contentType: 'application/json'
+    timeout: 10000
+
+    # Ti API Options
+    async: true
+    autoEncodeUrl: true
+
+    # Callbacks
+    success: null
+    error: null
+    beforeSend: null
+    complete: null
+  
+  encode: Ti.Network.encodeURIComponent
+
+  params: (data) ->
+    return '' unless data?
+    params = ("#{@encode(key)}=#{@encode(val)}" for key, val of data)
+    params.join '&'
+    
+  get: (o) ->
+    o.method = 'GET'
+    new @ o
+  
+  post: (o) ->
+    o.method = 'POST'
+    new @ o
+
+  download: (options) ->
+    file = conf.file
+    options.onload = (xhr) ->
+      return unless xhr.responseData?
+      if xhr.responseData.type is 1
+        f = Ti.Filesystem.getFile xhr.responseData.nativePath
+        file.deleteFile() if file.exists()
+        f.move file.nativePath
+      else
+        file.write xhr.responseData
+      options.success file, xhr.textStatus, xhr
+    new @ options
+
+  constructor: (options) ->
+    Tiger.extend options, @defaults
+    options.method = options.method.toUpperCase()
+
+    @debug "#{options.method} #{options.url} ..."
+    xhr = Ti.Network.createHTTPClient
+      autoEncodeUrl: options.autoEncodeUrl
+      async: options.async
+     
+    xhr.onerror = (xhr) => 
+      options.error xhr
+      options.complete xhr
+    xhr.onsendstream = options.onsendstream or (e) =>
+      @debug('Upload progress: ' + e.progress)
+    
+    if options.method is 'GET' and options.data
+      if options.url.indexOf('?') isnt -1 then options.url += '&'
+      else options.url += '?'
+      options.url += @params options.data
+  
+    xhr.open options.method, options.url
+    xhr.file = options.file if options.file
+    xhr.setRequestHeader 'Content-Type', options.contentType
+    if conf.headers
+      xhr.setRequestHeader name, header for name, header of conf.headers
+             
+    options.beforeSend xhr, options if options.beforeSend
+
+    if options.data and options.method is 'POST' or options.method is 'PUT'
+      @debug "Sending #{options.data} ..."
+      xhr.setRequestHeader 'Content-Type', 'application/x-www-form-urlencoded'
+      xhr.send options.data
+    else xhr.send()
+    xhr
 
 
 class Controller extends Module
@@ -106,7 +200,7 @@ class Controller extends Module
     @
   
   delay: (func, timeout) ->
-    setTimeout @proxy(func), (timeout || 0)
+    setTimeout @proxy(func), (timeout or 0)
 
 
 # Tiger View Element Event Wrapper
@@ -163,7 +257,7 @@ class Element extends Module
     @element = Ti.UI['create' + @elementName](props)
   
   add: (el) ->
-    @element.add(el.element || el)
+    @element.add(el.element or el)
     @
   
   set: (props) ->
@@ -176,7 +270,7 @@ class Element extends Module
   
   get: (prop) ->
     cProp = capitalize(prop)
-    return @[prop] || @['get' + cProp] && @['get' + cProp]() || @element[prop]
+    return @[prop] or @['get' + cProp] and @['get' + cProp]() or @element[prop]
   
   hide: ->
     @element.hide()
@@ -201,14 +295,30 @@ class Element extends Module
     @
   
   remove: (el) ->
-    @element.remove(el.element || el)
+    @element.remove(el.element or el)
     @
 
-  animate: (options, callback) ->
-    animation = Titanium.UI.createAnimation(options)
-    if callback then animation.addEventListener 'complete', callback
-    @element.animate animation
+  step: ->
+    if @animations.length
+      delete @animation
+      @animation = @animations.shift()
+      @element.animate @animation
     @
+  
+  animate: (options, callback) ->
+    callbackAndStep = =>
+      callback() if callback
+      @step()
+
+    animation = Ti.UI.createAnimation(options)
+    animation.addEventListener 'complete', callbackAndStep
+    # if @animations then @animations.push animation
+    # else
+    #   @animations = [animation]
+    #   @step()
+    @animations = [animation]
+    @step()
+
 
 # Globals
 
@@ -220,6 +330,7 @@ Tiger.extend     = extend
 Tiger.makeArray  = makeArray
 Tiger.isArray    = Spine.isArray
 Tiger.Class      = Module
+Tiger.Ajax       = Ajax
 Tiger.Controller = Controller
 Tiger.Element    = Element
 Tiger.Env        = Env
