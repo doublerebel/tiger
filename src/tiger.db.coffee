@@ -119,6 +119,7 @@ class TigerDB extends Tiger.Class
     if row.name.match /^[A-Z]/ then mapTable row.name
 
   executeQuery: (string, args, callback) ->
+    args = (/^[0-9]+\.?[0-9]*$/.exec(arg) and "\"#{String arg}\"" or arg for arg in args)
     @debug "SQL: #{string} | #{args.join()}"
     
     resultSet = @db.execute string, args
@@ -127,8 +128,14 @@ class TigerDB extends Tiger.Class
     if resultSet
       while resultSet.isValidRow()
         row = {}
-        row[resultSet.fieldName(i)] = resultSet.field(i) for i in [0..resultSet.fieldCount-1]
-        @debug 'Result:', row
+        for i in [0..resultSet.fieldCount-1]
+          rawValue = resultSet.field(i)
+          try
+            value = JSON.parse rawValue
+          catch error
+            value = rawValue
+          row[resultSet.fieldName(i)] = value
+        @debug "Result: #{JSON.stringify row}"
         resultArray.push(row)
         resultSet.next()
       resultSet.close()
@@ -213,7 +220,7 @@ class TigerTable extends Tiger.Class
     vals = []
     for key, val of obj
       keys.push key
-      vals.push val
+      vals.push if typeof val is 'object' then JSON.stringify val else val
     [keys, vals]
 
 
