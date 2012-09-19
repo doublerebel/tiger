@@ -45,23 +45,15 @@ Tiger[element] = Elements[element] for element in elements
 Tiger.Window.include
   open: -> @element.open()
   close: -> @element.close()
-  # constructor: (props) ->
-  #   props = Tiger.extend @defaults or {}, props
-  #   win = @element = Ti.UI['create' + @elementName](props)
-    
-  #   @tiBind 'android:back', ->
-  #     for child of win.children
-  #       win.remove child
-  #     setTimeout (-> win.close()), 10
 
 Tiger.TableView.include
   appendRow: (el) ->
-    @element.appendRow(el.element || el)
+    @element.appendRow(el.element or el)
     @
   setData: (rows) ->
     nativeRows = []
     for row in rows
-      nativeRows.push(row.element || row)
+      nativeRows.push(row.element or row)
     @element.setData nativeRows
     @
 
