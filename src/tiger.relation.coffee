@@ -2,49 +2,91 @@ Tiger   = @Tiger or require('tiger')
 isArray = Tiger.isArray
 
 
-class O2MCollection extends Tiger.Class
-  constructor: (options={}) ->
+class BaseCollection extends Tiger.Class
+  constructor: (options = {}) ->
     for key, value of options
       @[key] = value
-
-  add: (item, save = true) ->
-    if isArray(item)
-      @add i, false for i in item
-
-    else
-      item = @model.find item unless item instanceof @model
-      @record[@lkey].push item[@fkey]
-      @record.save() if save
-
-  remove: (item) ->
-    item = @model.find item unless item instanceof @model
-    @record[@lkey].splice @record[@lkey].indexOf item[@fkey]
-
-  all: ->
-    @model.select (record) => record[@fkey] in @record[@lkey]
 
   first: ->
     @all()[0]
 
   last: ->
     values = @all()
-    values[values.length -1]
-  
-  find: (id) ->
-    id in @record[@lkey] and @model.find id or throw 'Unknown record'
+    values[values.length - 1]
 
   create: (record) ->
     @add @model.create(record)
 
-  
-class M2MCollection extends Tiger.Class
-  constructor: (options={}) ->
-    for key, value of options
-      @[key] = value
 
-  add: (item) ->
+class Collection extends BaseCollection
+  add: (fItem) ->
+    fItem[@fkey] = @record.id
+    fItem.save()
+
+  all: ->
+    @model.select (rec) => @associated(rec)
+
+  find: (id) ->
+    records = @select (rec) =>
+      rec.id + '' is id + ''
+    throw('Unknown record') unless records[0]
+    records[0]
+
+  findAllByAttribute: (name, value) ->
+    @model.select (rec) =>
+      @associated(rec) and rec[name] is value
+
+  findByAttribute: (name, value) ->
+    @findAllByAttribute(name, value)[0]
+
+  select: (cb) ->
+    @model.select (rec) =>
+      @associated(rec) and cb(rec)
+
+  refresh: (values) ->
+    delete @model.records[record.id] for record in @all()
+    records = @model.fromJSON(values)
+
+    records = [records] unless isArray(records)
+
+    for record in records
+      record.newRecord = false
+      record[@fkey] = @record.id
+      @model.records[record.id] = record
+
+    @model.trigger('refresh', @model.cloneArray(records))
+
+  # Private
+
+  associated: (record) ->
+    record[@fkey] is @record.id
+
+
+class O2MCollection extends BaseCollection
+  add: (item, save = true) ->
     if isArray(item)
-      @add i for i in item
+      @add i, false for i in item
+    else
+      item = @model.find item unless item instanceof @model
+      @record[@lkey].push item[@fkey]
+    @record.save() if save
+
+  remove: (item) ->
+    item = @model.find item unless item instanceof @model
+    @record[@lkey].splice (@record[@lkey].indexOf item[@fkey]), 1
+    @record.save()
+
+  all: ->
+    (@model.find lkey for lkey in @record[@lkey])
+
+  find: (id) ->
+    id in @record[@lkey] and @model.find id or throw 'Unknown record'
+
+  
+class M2MCollection extends BaseCollection
+  add: (item, save = true) ->
+    if isArray(item)
+      @add i, false for i in item
 
     else
       item = @model.find item unless item instanceof @model
@@ -56,7 +98,7 @@ class M2MCollection extends Tiger.Class
       else
         hub["#{@rev_name}_id"] = item.id
         hub["#{@name}_id"] = @record.id
-      hub.save()
+    hub.save() if save
 
   remove: (item) ->
     i.destroy() for i in @Hub.select (item) =>
@@ -71,22 +113,12 @@ class M2MCollection extends Tiger.Class
     @_link @Hub.select (item) =>
       @associated(item)
 
-  first: ->
-    @all()[0]
-
-  last: ->
-    values = @all()
-    values[values.length -1]
-  
   find: (id) ->
     records = @Hub.select (rec) =>
       @associated(rec, id)
 
     throw 'Unknown record' unless records[0]
     @_link(records)[0]
-
-  create: (record) ->
-    @add @model.create(record)
 
   associated: (record, id) ->
     if @left_to_right
@@ -158,7 +190,7 @@ Tiger.Model.extend
     unless name?
       name = model.className.toLowerCase()
       name = singularize underscore name
-    # local key is singularized foreign model class plus plural
+    
     lkey = "#{name}_ids"
     unless lkey in @attributes
       @attributes.push lkey
@@ -172,26 +204,31 @@ Tiger.Model.extend
     @::["#{name}s"] = (value) ->
       association(@, model)
       
-  hasMany: (name, model, fkey) ->
+  hasMany: (model, name, fkey) ->
+    model = require(model) if typeof model is 'string'
+    unless name?
+      name = model.className.toLowerCase()
+      name = singularize underscore name
     fkey ?= "#{underscore(this.className)}_id"
-
+    
     association = (record) ->
-      model = require(model) if typeof model is 'string'
+      new Collection(
+        name: name, model: model,
+        record: record, fkey: fkey
+      )
 
-      q = {}
-      q[fkey] = record.id
-      model.filter(q)
-
-    @::[name] = (value) ->
+    @::["#{name}s"] = (value) ->
       association(@).refresh(value) if value?
       association(@)
 
-  belongsTo: (name, model, fkey) ->
-    fkey ?= "#{singularize(name)}_id"
+  belongsTo: (model, name, fkey) ->
+    model = require(model) if typeof model is 'string'
+    unless name?
+      name = model.className.toLowerCase()
+      name = singularize underscore name
+    fkey ?= "#{name}_id"
 
     association = (record) ->
-      model = require(model) if typeof model is 'string'
-
       new Instance(
         name: name, model: model,
         record: record, fkey: fkey
@@ -203,12 +240,14 @@ Tiger.Model.extend
 
     @attributes.push(fkey)
 
-  hasOne: (name, model, fkey) ->
+  hasOne: (model, name, fkey) ->
+    model = require(model) if typeof model is 'string'
+    unless name?
+      name = model.className.toLowerCase()
+      name = singularize underscore name
     fkey ?= "#{underscore(@className)}_id"
 
     association = (record) ->
-      model = require(model) if typeof model is 'string'
-
       new Singleton(
         name: name, model: model,
         record: record, fkey: fkey
@@ -219,30 +258,30 @@ Tiger.Model.extend
       association(@).find()
 
   foreignKey: (model, name, rev_name) ->
-    unless rev_name?
-      rev_name = @className.toLowerCase()
-      rev_name = singularize underscore rev_name
-      rev_name = "#{rev_name}s"
-
     model = require(model) if typeof model is 'string'
     unless name?
       name = model.className.toLowerCase()
       name = singularize underscore name
+
+    unless rev_name?
+      rev_name = @className.toLowerCase()
+      rev_name = singularize underscore rev_name
+      rev_name = "#{rev_name}s"
 
     @belongsTo name, model
     model.hasMany rev_name, @
 
   manyToMany: (model, name, rev_name) ->
+    model = require(model) if typeof model is 'string'
+    unless name?
+      name = model.className.toLowerCase()
+      name = singularize underscore name
+
     unless rev_name?
       rev_name = @className.toLowerCase()
       rev_name = singularize underscore rev_name
       rev_name = "#{rev_name}s"
     rev_model = @
-
-    model = require(model) if typeof model is 'string'
-    unless name?
-      name = model.className.toLowerCase()
-      name = singularize underscore name
 
     local = typeof model.loadLocal is 'function' or typeof rev_model.loadLocal is 'function'
     tigerDB = typeof model.loadTigerDB is 'function' or typeof rev_model.loadTigerDB is 'function'
