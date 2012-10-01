@@ -144,7 +144,9 @@ class Instance extends Tiger.Class
     unless value instanceof @model
       value = new @model(value)
     value.save() if value.isNew()
+    
     @record[@fkey] = value and value.id
+    @record.save()
 
 
 class Singleton extends Tiger.Class
