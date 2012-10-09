@@ -1,0 +1,24 @@
+{
+  "name": "tiger",
+  "version": "0.0.3",
+  "description": "A full port of Spine.js MVC framework to Titanium Mobile, with enhancements",
+  "main": "./lib/tiger.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/doublerebel/tiger.git"
+  },
+  "keywords": [
+    "MVC",
+    "Titanium",
+    "Appcelerator",
+    "CoffeeScript",
+    "SQL",
+    "JavaScript",
+    "Framework"
+  ],
+  "author": "Charles Phillips",
+  "license": "MIT"
+}

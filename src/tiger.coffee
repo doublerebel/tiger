@@ -1,4 +1,4 @@
-# Tiger 0.0.2 by Charles Phillips <charles@doublerebel.com>
+# Tiger 0.0.3 by Charles Phillips <charles@doublerebel.com>
 # A library enhancing Titanium apps with Spine's MVC architecture
 # Uses CoffeeScript's inheritance, and adds jQuery-like chainability
 # Add tiger.db for persistent storage
