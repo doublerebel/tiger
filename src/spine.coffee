@@ -224,7 +224,7 @@ class Model extends Module
 
   @idCounter: 0
 
-  @uid: (prefix = '') ->
+  @uid: (prefix = 'c-') ->
     uid = prefix + @idCounter++
     if @exists uid then @uid prefix else uid
 
@@ -233,7 +233,7 @@ class Model extends Module
   constructor: (atts) ->
     super
     @load atts if atts
-    @cid or= @constructor.uid('c-')
+    @cid or= @constructor.uid()
 
   isNew: ->
     not @exists()
