@@ -23,6 +23,10 @@ class Collection extends BaseCollection
     fItem[@fkey] = @record.id
     fItem.save()
 
+  remove: (fItem) ->
+    fItem = @find(fItem) if typeof fItem is 'string'
+    fItem.destroy()
+
   all: ->
     @model.select (rec) => @associated(rec)
 
