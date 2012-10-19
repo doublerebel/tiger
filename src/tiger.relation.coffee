@@ -175,6 +175,8 @@ underscore = (str) ->
      .replace(/-/g, '_')
      .toLowerCase()
 
+loadModel = (model) ->
+  if typeof model is 'string' then require(model) else model
 
 Tiger.Model.extend
   __filter: (args, revert=false) ->
@@ -188,8 +190,8 @@ Tiger.Model.extend
   exclude: (args) -> @select @__filter args, true
 
   oneToMany: (model, name, fkey) ->
-    model = require(model) if typeof model is 'string'
     unless name?
+      model = loadModel model
       name = model.className.toLowerCase()
       name = singularize underscore name
     
@@ -200,6 +202,7 @@ Tiger.Model.extend
     fkey ?= 'id'
 
     association = (record, model) ->
+      model = loadModel model
       record[lkey] = [] unless record[lkey]
       new O2MCollection {lkey, fkey, record, model}
       
@@ -207,13 +210,14 @@ Tiger.Model.extend
       association(@, model)
       
   hasMany: (model, name, fkey) ->
-    model = require(model) if typeof model is 'string'
     unless name?
+      model = loadModel model
       name = model.className.toLowerCase()
       name = singularize underscore name
     fkey ?= "#{underscore(this.className)}_id"
     
     association = (record) ->
+      model = loadModel model
       new Collection(
         name: name, model: model,
         record: record, fkey: fkey
@@ -224,13 +228,14 @@ Tiger.Model.extend
       association(@)
 
   belongsTo: (model, name, fkey) ->
-    model = require(model) if typeof model is 'string'
     unless name?
+      model = loadModel model
       name = model.className.toLowerCase()
       name = singularize underscore name
     fkey ?= "#{name}_id"
 
     association = (record) ->
+      model = loadModel model
       new Instance(
         name: name, model: model,
         record: record, fkey: fkey
@@ -243,13 +248,14 @@ Tiger.Model.extend
     @attributes.push(fkey)
 
   hasOne: (model, name, fkey) ->
-    model = require(model) if typeof model is 'string'
     unless name?
+      model = loadModel model
       name = model.className.toLowerCase()
       name = singularize underscore name
     fkey ?= "#{underscore(@className)}_id"
 
     association = (record) ->
+      model = loadModel model
       new Singleton(
         name: name, model: model,
         record: record, fkey: fkey
@@ -260,8 +266,8 @@ Tiger.Model.extend
       association(@).find()
 
   foreignKey: (model, name, rev_name) ->
-    model = require(model) if typeof model is 'string'
     unless name?
+      model = loadModel model
       name = model.className.toLowerCase()
       name = singularize underscore name
 
@@ -274,8 +280,8 @@ Tiger.Model.extend
     model.hasMany rev_name, @
 
   manyToMany: (model, name, rev_name) ->
-    model = require(model) if typeof model is 'string'
     unless name?
+      model = loadModel model
       name = model.className.toLowerCase()
       name = singularize underscore name
 
@@ -299,6 +305,7 @@ Tiger.Model.extend
     Hub.foreignKey model,     "#{name}"
 
     association = (record, model, left_to_right) ->
+      model = loadModel model
       new M2MCollection {name, rev_name, record, model, Hub: Hub, left_to_right}
 
     rev_model::["#{name}s"] = (value) ->
