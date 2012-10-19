@@ -1,4 +1,4 @@
-# Tiger 0.0.3 by Charles Phillips <charles@doublerebel.com>
+# Tiger 0.0.2 by Charles Phillips <charles@doublerebel.com>
 # A library enhancing Titanium apps with Spine's MVC architecture
 # Uses CoffeeScript's inheritance, and adds jQuery-like chainability
 # Add tiger.db for persistent storage
@@ -52,11 +52,10 @@ Log = extend {}, Spine.Log,
       Log.debug "(trace) #{frame.getFileName()}:#{frame.getLineNumber()} - #{frame.getFunctionName()}"
 
 for level in logLevels
-  ((level) ->
+  do (level) ->
     Log[level] = (args...) ->
       args.unshift(level)
       Log.log.apply(@, args)
-  )(level)
 
 
 class Ajax extends Module
@@ -188,10 +187,9 @@ class Controller extends Module
   bindSynced: ->
     for key, selector of @map
       @debug "Binding #{key} to #{selector}..."
-      ((key, selector, self) ->
+      do (key, selector, self = @) ->
         self[selector] or= self.view[selector]
         self[selector].change((e) -> self.store[key] = e.value)
-      )(key, selector, @)
     @
 
   loadSynced: ->
@@ -229,21 +227,19 @@ eventList = [
 eventWraps = {}
 
 for event in eventList
-  ((event) ->
+  do (event) ->
     eventWraps[event] = (fn) ->
       if not fn then @element.fireEvent(event)
       else @tiBind(event, fn)
       @
-  )(event)
-
+  
 for event in ['blur', 'focus']
-  ((event) ->
+  do (event) ->
     eventWraps[event] = (fn) ->
       if not fn then @element[event]()
       else @tiBind(event, fn)
       @
-  )(event)
-
+  
 
 
 capitalize = (string) -> string.charAt(0).toUpperCase() + string.slice(1)
