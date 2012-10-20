@@ -15,7 +15,8 @@ class BaseCollection extends Tiger.Class
     values[values.length - 1]
 
   create: (record) ->
-    @add @model.create(record)
+    newRecord = @model.create(record)
+    (@add newRecord) if newRecord
 
 
 class Collection extends BaseCollection
