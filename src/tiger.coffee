@@ -105,7 +105,7 @@ class Ajax extends Module
         f.move file.nativePath
       else
         file.write xhr.responseData
-      options.success file, xhr.textStatus, xhr
+      options.success file, xhr.statusText, xhr
     new @ options
 
   constructor: (options = {}) ->
@@ -119,9 +119,11 @@ class Ajax extends Module
       timeout: options.timeout
      
     xhr.onerror = -> 
-      options.error xhr, xhr.textStatus
-      options.complete xhr
-    xhr.onload = -> options.success xhr
+      options.error xhr, xhr.statusText
+      options.complete xhr, xhr.statusText
+    xhr.onload = ->
+      options.success (xhr.responseText or xhr.responseXML), xhr.statusText, xhr
+      options.complete xhr, xhr.statusText
     _debug = @proxy @debug
     xhr.onreadystatechanged = options.onreadystatechanged or ->
       switch @readyState
