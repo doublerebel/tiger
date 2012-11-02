@@ -78,23 +78,24 @@ class Ajax extends Module
     error: null
     beforeSend: null
     complete: null
+    onreadystatechanged: null
   
   encode: Ti.Network.encodeURIComponent
 
-  params: (data) ->
+  @params: (data) ->
     return '' unless data?
     params = ("#{@encode(key)}=#{@encode(val)}" for key, val of data)
     params.join '&'
     
-  get: (o) ->
+  @get: (o) ->
     o.method = 'GET'
     new @ o
   
-  post: (o) ->
+  @post: (o) ->
     o.method = 'POST'
     new @ o
 
-  download: (options) ->
+  @download: (options) ->
     file = conf.file
     options.onload = (xhr) ->
       return unless xhr.responseData?
@@ -107,18 +108,27 @@ class Ajax extends Module
       options.success file, xhr.textStatus, xhr
     new @ options
 
-  constructor: (options) ->
-    Tiger.extend options, @defaults
+  constructor: (options = {}) ->
+    options = Tiger.extend {}, @defaults, options
     options.method = options.method.toUpperCase()
 
     @debug "#{options.method} #{options.url} ..."
     xhr = Ti.Network.createHTTPClient
       autoEncodeUrl: options.autoEncodeUrl
       async: options.async
+      timeout: options.timeout
      
-    xhr.onerror = (xhr) => 
-      options.error xhr
+    xhr.onerror = -> 
+      options.error xhr, xhr.textStatus
       options.complete xhr
+    xhr.onload = -> options.success xhr
+    _debug = @proxy @debug
+    xhr.onreadystatechanged = options.onreadystatechanged or ->
+      switch @readyState
+        when @OPENED then _debug 'readyState: opened...'
+        when @HEADERS_RECEIVED then _debug 'readyState: headers received...'
+        when @LOADING then _debug 'readyState: loading...'
+        when @DONE then _debug 'readyState: done.'
     xhr.onsendstream = options.onsendstream or (e) =>
       @debug('Upload progress: ' + e.progress)
     
@@ -130,11 +140,10 @@ class Ajax extends Module
     xhr.open options.method, options.url
     xhr.file = options.file if options.file
     xhr.setRequestHeader 'Content-Type', options.contentType
-    if conf.headers
-      xhr.setRequestHeader name, header for name, header of conf.headers
+    if options.headers
+      xhr.setRequestHeader name, header for name, header of options.headers
              
     options.beforeSend xhr, options if options.beforeSend
-
     if options.data and options.method is 'POST' or options.method is 'PUT'
       @debug "Sending #{options.data} ..."
       xhr.setRequestHeader 'Content-Type', 'application/x-www-form-urlencoded'
