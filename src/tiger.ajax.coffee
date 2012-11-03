@@ -1,6 +1,7 @@
-Tiger  = @Tiger or require('spine')
-Model  = Tiger.Model
-{Pipeliner} = require 'icedlib'
+Tiger = @Tiger or require('tiger')
+Model = Tiger.Model
+
+{Pipeliner}  = require 'icedlib'
 {Rendezvous} = require 'iced'
 
 
@@ -9,7 +10,6 @@ Ajax =
     object and object.url?() or object.url
 
   enabled: true
-
   disable: (callback) ->
     if @enabled
       @enabled = false
@@ -22,7 +22,11 @@ Ajax =
     else
       do callback
 
+  max: 100
+  throttle: 0
+
   queue: (request) ->
+    @pipeliner or= new Pipeliner @max, @throttle
     return @pipeliner.queue unless request
     await @pipeliner.waitInQueue defer()
     request @pipeliner.defer()
@@ -39,16 +43,11 @@ class Base
     headers: {'X-Requested-With': 'XMLHttpRequest'}
 
   queue: Ajax.queue
-  throttle: 0
-  max: 100
 
   ajax: (params, defaults) ->
-    Tiger.Ajax @ajaxSettings(params, defaults)
+    new Tiger.Ajax @ajaxSettings(params, defaults)
 
   ajaxQueue: (params, defaults) ->
-    @pipeliner or= new Pipeliner @max, @throttle
-    return @pipeliner unless Ajax.enabled
-
     xhr = null
     rv  = new Rendezvous
     
@@ -71,7 +70,7 @@ class Base
       return xhr.abort(statusText) if xhr
       index = @queue().indexOf(request)
       @queue().splice(index, 1) if index > -1
-      @pipeliner.n_out--
+      Ajax.pipeliner.n_out-- if Ajax.pipeliner
 
       # deferred.rejectWith(
       #   settings.context or settings,
@@ -79,6 +78,7 @@ class Base
       # )
       request
 
+    return request unless Ajax.enabled
     @queue request
     request
 
@@ -232,6 +232,7 @@ Model.Ajax.Methods =
     @include Include
 
 # Globals
-Ajax.defaults   = Base::defaults
-Tiger.ModelAjax = Ajax
-module?.exports = Ajax
+Ajax.defaults           = Base::defaults
+Tiger.Ajax.ModelAdapter = Ajax
+Tiger.Ajax.Q            = Base
+module?.exports         = Ajax
