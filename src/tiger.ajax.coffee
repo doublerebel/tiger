@@ -90,16 +90,14 @@ class Collection extends Base
 
   find: (id, params) ->
     record = new @model(id: id)
-    @ajaxQueue(
-      params,
+    @ajaxQueue params,
       type: 'GET',
       url:  Ajax.getURL(record)
       success: @recordsResponse
       error: @failResponse
 
   all: (params) ->
-    @ajaxQueue(
-      params,
+    @ajaxQueue params,
       type: 'GET',
       url:  Ajax.getURL(@model)
       success: @recordsResponse
@@ -127,16 +125,14 @@ class Singleton extends Base
     @model = @record.constructor
 
   reload: (params, options) ->
-    @ajaxQueue(
-      params,
+    @ajaxQueue params,
       type: 'GET'
       url:  Ajax.getURL(@record)
       success: @recordResponse(options)
       error: @failResponse(options)
 
   create: (params, options) ->
-    @ajaxQueue(
-      params,
+    @ajaxQueue params,
       type: 'POST'
       data: JSON.stringify(@record)
       url:  Ajax.getURL(@model)
@@ -144,8 +140,7 @@ class Singleton extends Base
       error: @failResponse(options)
 
   update: (params, options) ->
-    @ajaxQueue(
-      params,
+    @ajaxQueue params,
       type: 'PUT'
       data: JSON.stringify(@record)
       url:  Ajax.getURL(@record)
@@ -153,8 +148,7 @@ class Singleton extends Base
       error: @failResponse(options)
 
   destroy: (params, options) ->
-    @ajaxQueue(
-      params,
+    @ajaxQueue params,
       type: 'DELETE'
       url:  Ajax.getURL(@record)
       success: @recordResponse(options)
