@@ -297,6 +297,11 @@ class Element extends Module
     @element.removeEventListener(event, fn)
     @
   
+  tiOne: (event, fn) ->
+    @tiBind event, ->
+      @removeEventListener(event, arguments.callee)
+      fn.apply(@, arguments)
+
   tiTrigger: (event) ->
     @element.fireEvent(event)
     @
