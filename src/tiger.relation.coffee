@@ -180,10 +180,16 @@ underscore = (str) ->
      .replace(/-/g, '_')
      .toLowerCase()
 
-loadModel = (model) ->
-  if typeof model is 'string' then require(model) else model
+loadModel = (model, parent) ->
+  if typeof model is 'string'
+    model = require(model)
+    model.bind 'error', (record, msg) => parent.trigger 'error', record, msg, model.className
+    if typeof model.loadTigerDB is 'function'
+      model.bindTigerDB().fetch()
+  model
 
-Tiger.Model.extend
+
+Relations = 
   __filter: (args, revert=false) ->
     (rec) ->
       q = !!revert
@@ -195,8 +201,9 @@ Tiger.Model.extend
   exclude: (args) -> @select @__filter args, true
 
   oneToMany: (model, name, fkey) ->
+    parent = @
     unless name?
-      model = loadModel model
+      model = loadModel model, parent
       name = model.className.toLowerCase()
       name = singularize underscore name
     
@@ -207,7 +214,7 @@ Tiger.Model.extend
     fkey ?= 'id'
 
     association = (record, model) ->
-      model = loadModel model
+      model = loadModel model, parent
       record[lkey] = [] unless record[lkey]
       new O2MCollection {lkey, fkey, record, model}
       
@@ -215,14 +222,15 @@ Tiger.Model.extend
       association(@, model)
       
   hasMany: (model, name, fkey) ->
+    parent = @
     unless name?
-      model = loadModel model
+      model = loadModel model, parent
       name = model.className.toLowerCase()
       name = singularize underscore name
     fkey ?= "#{underscore(this.className)}_id"
     
     association = (record) ->
-      model = loadModel model
+      model = loadModel model, parent
       new Collection(
         name: name, model: model,
         record: record, fkey: fkey
@@ -233,14 +241,15 @@ Tiger.Model.extend
       association(@)
 
   belongsTo: (model, name, fkey) ->
+    parent = @
     unless name?
-      model = loadModel model
+      model = loadModel model, parent
       name = model.className.toLowerCase()
       name = singularize underscore name
     fkey ?= "#{name}_id"
 
     association = (record) ->
-      model = loadModel model
+      model = loadModel model, parent
       new Instance(
         name: name, model: model,
         record: record, fkey: fkey
@@ -253,14 +262,15 @@ Tiger.Model.extend
     @attributes.push(fkey)
 
   hasOne: (model, name, fkey) ->
+    parent = @
     unless name?
-      model = loadModel model
+      model = loadModel model, parent
       name = model.className.toLowerCase()
       name = singularize underscore name
     fkey ?= "#{underscore(@className)}_id"
 
     association = (record) ->
-      model = loadModel model
+      model = loadModel model, parent
       new Singleton(
         name: name, model: model,
         record: record, fkey: fkey
@@ -271,8 +281,9 @@ Tiger.Model.extend
       association(@).find()
 
   foreignKey: (model, name, rev_name) ->
+    parent = @
     unless name?
-      model = loadModel model
+      model = loadModel model, parent
       name = model.className.toLowerCase()
       name = singularize underscore name
 
@@ -285,8 +296,9 @@ Tiger.Model.extend
     model.hasMany rev_name, @
 
   manyToMany: (model, name, rev_name) ->
+    parent = @
     unless name?
-      model = loadModel model
+      model = loadModel model, parent
       name = model.className.toLowerCase()
       name = singularize underscore name
 
@@ -310,7 +322,7 @@ Tiger.Model.extend
     Hub.foreignKey model,     "#{name}"
 
     association = (record, model, left_to_right) ->
-      model = loadModel model
+      model = loadModel model, parent
       new M2MCollection {name, rev_name, record, model, Hub: Hub, left_to_right}
 
     rev_model::["#{name}s"] = (value) ->
@@ -318,3 +330,9 @@ Tiger.Model.extend
 
     model::["#{rev_name}s"] = (value) ->
       association(@, rev_model, false)
+
+
+Tiger.Model.extend Relations
+Relations.loadModel   = loadModel
+Tiger.Model.Relations = Relations
+module?.exports       = Relations
