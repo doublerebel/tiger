@@ -43,18 +43,35 @@ Tiger[element] = Elements[element] for element in elements
 
 # Extend individual elements for special cases
 Tiger.Window.include
-  open: -> @element.open()
-  close: -> @element.close()
+  open: ->
+    @element.open()
+    @
+
+  close: ->
+    @element.close()
+    @
+
+
+Tiger.OptionDialog.include
+  show: ->
+    @element.show()
+    @
+
+  hide: ->
+    @element.hide()
+    @
+
 
 Tiger.TableView.include
   appendRow: (el) ->
     @element.appendRow(el.element or el)
     @
   setData: (rows) ->
-    nativeRows = []
-    for row in rows
-      nativeRows.push(row.element or row)
+    nativeRows = (row.element or row for row in rows)
     @element.setData nativeRows
+    @
+  setSections: (sections) ->
+    @element.appendSection (section.element or section) for section in sections
     @
 
 Tiger.TableViewRow.extend
