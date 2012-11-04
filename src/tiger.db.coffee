@@ -158,14 +158,14 @@ class TigerDB extends Tiger.Class
 
 class TigerTable extends Tiger.Class
   @include Tiger.Log
-
+  
   constructor: (@db = "", @name = "", @executeQuery) ->
 
-  commit: (columns...) ->
-    for i of columns
-      if columns[i] is "id"
-        columns[i] = "id TEXT NOT NULL PRIMARY KEY"
-        break
+  commit: (attributes) ->
+    columns = Tiger.makeArray attributes
+    for i of columns when columns[i] is "id"
+      columns[i] = "id TEXT NOT NULL PRIMARY KEY"
+      break
     sendStr = "CREATE TABLE IF NOT EXISTS #{@name}(#{columns})"
     @executeQuery sendStr, [], null
 
@@ -212,7 +212,7 @@ class TigerTable extends Tiger.Class
           else
             sendStr.push "#{key} like '%#{val}%'"
         
-        lastStr = "select# from #{@name} where " + sendStr.join(" and ")
+        lastStr = "select * from #{@name} where " + sendStr.join(" and ")
         @executeQuery lastStr, []
 
   deconstruct: (obj) ->
@@ -230,7 +230,7 @@ Model.TigerDB =
   db: new TigerDB dbName
   
   install: ->
-    @attributes.push("id")
+    @attributes.push("id") unless "id" in @attributes
     @db.createTable @name, @attributes
     @installed = true
     @
