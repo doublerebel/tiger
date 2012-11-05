@@ -80,7 +80,8 @@ class Ajax extends Module
     complete: null
     onreadystatechanged: null
   
-  encode: Ti.Network.encodeURIComponent
+  @encode: (string) ->
+    Ti.Network.encodeURIComponent string
 
   @params: (data) ->
     return '' unless data?
@@ -137,7 +138,7 @@ class Ajax extends Module
     if options.method is 'GET' and options.data
       if options.url.indexOf('?') isnt -1 then options.url += '&'
       else options.url += '?'
-      options.url += @params options.data
+      options.url += @constructor.params options.data
   
     xhr.open options.method, options.url
     xhr.file = options.file if options.file
