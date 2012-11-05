@@ -123,7 +123,7 @@ class Ajax extends Module
       options.error xhr, xhr.statusText
       options.complete xhr, xhr.statusText
     xhr.onload = ->
-      options.success (xhr.responseText or xhr.responseXML), xhr.statusText, xhr
+      options.success (xhr.responseXML or xhr.responseText), xhr.statusText, xhr
       options.complete xhr, xhr.statusText
     _debug = @proxy @debug
     xhr.onreadystatechanged = options.onreadystatechanged or ->
