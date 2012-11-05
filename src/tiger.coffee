@@ -74,10 +74,10 @@ class Ajax extends Module
     autoEncodeUrl: true
 
     # Callbacks
-    success: null
-    error: null
+    success: ->
+    error: ->
     beforeSend: null
-    complete: null
+    complete: ->
     onreadystatechanged: null
   
   @encode: (string) ->
