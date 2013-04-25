@@ -170,7 +170,8 @@ class Controller extends Module
 
   constructor: (@options = {}) ->
     @[key] = val for key, val of @options
-    
+    @_map = {}
+
     @elements or= @constructor.elements
     @refreshElements() if @elements
     
@@ -180,42 +181,57 @@ class Controller extends Module
     @map or= @constructor.map
     @bindSynced() if @map
     
-  delegateEvents: ->
-    for key, methodName of @events
-      method     = @proxy @[methodName]
-      match      = key.match /^(\w+)\s*(.*)$/
-      eventName  = match[1]
-      selector   = match[2]
-      
-      @debug "Binding #{selector} #{eventName}..."
-      if selector is '' then @el.tiBind eventName, method
-      else if '.' in selector
-        selectors = selector.split '.'
-        sel = selectors.shift()
-        el = @[sel] or @view[sel]
-        el = el[s] for s in selectors
-        el.tiBind eventName, method
-      else
-        @[selector] or= @view[selector]
-        @[selector].tiBind eventName, method
-    @
-
   refreshElements: ->
     return unless @view
     for el in @elements
       @[el] = @view[el]
+    @
   
+  mapSelector: (selector) ->
+    return el if el = @_map[selector]
+    if '.' in selector
+      selectors = selector.split '.'
+      sel = selectors.shift()
+      el = @[sel] or @[sel] = @view[sel]
+      el = el[s] for s in selectors
+    else el = @[selector] or @[selector] = @view[selector]
+    @_map[selector] = el
+
+  delegateEvents: ->
+    for key, methodName of @events
+      method    = @proxy @[methodName]
+      match     = key.match /^(\w+)\s*(.*)$/
+      eventName = match[1]
+      selector  = match[2]
+      
+      @debug "Binding #{selector} #{eventName}..."
+      if selector is '' then @view.tiBind eventName, method
+      else
+        el = @mapSelector selector
+        el.tiBind eventName, method
+    @
+
   bindSynced: ->
-    for key, selector of @map
-      @debug "Binding #{key} to #{selector}..."
-      do (key, selector, self = @) ->
-        self[selector] or= self.view[selector]
-        self[selector].change((e) -> self.store[key] = e.value)
+    for field, selector of @map
+      @debug "Binding #{field} to #{selector}..."
+      do (field, self = @) ->
+        el = self.mapSelector selector
+        el.change((e) -> self.store[field] = e.value) if el
     @
 
   loadSynced: ->
-    for key, selector of @map
-      @[selector].set value: @store[key] or ''
+    for field, selector of @map
+      if '.' in selector
+        selectors = selector.split '.'
+        prop = "#{selectors.pop()}"
+        selector = selectors.join()
+      else prop = 'value'
+      el = @_map[selector] or @mapSelector selector
+      value = @store[field]
+      value or= '' if prop is 'value'
+      props = {}
+      props[prop] = value
+      el.set props
     @
   
   delay: (func, timeout) ->
