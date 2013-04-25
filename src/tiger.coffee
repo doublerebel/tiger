@@ -65,7 +65,11 @@ class Ajax extends Module
     method: 'GET'
     url: null
     data: false
+    #contentType: 'application/x-www-form-urlencoded; charset=UTF-8'
     contentType: 'application/json'
+    enableKeepAlive: false
+    # validatesSecureCertificate
+    # withCredentials
     timeout: 10000
 
     # Ti API Options
@@ -118,8 +122,11 @@ class Ajax extends Module
       async: options.async
       timeout: options.timeout
      
-    xhr.onerror = -> 
-      options.error xhr, xhr.statusText
+    xhr.onerror = ->
+      unless xhr.statusText
+        if xhr.readyState is xhr.OPENED then error = 'No response from server'
+        else error = 'Unknown error'
+      options.error xhr, xhr.statusText, error
       options.complete xhr, xhr.statusText
     xhr.onload = ->
       options.success (xhr.responseXML or xhr.responseText), xhr.statusText, xhr
@@ -139,16 +146,19 @@ class Ajax extends Module
       else options.url += '?'
       options.url += @constructor.params options.data
   
+    if Ti.Network.networkType is Ti.Network.NETWORK_NONE
+      @debug "No network available.  Cannot open connection to #{options.url}"
+      return xhr
+
     xhr.open options.method, options.url
     xhr.file = options.file if options.file
-    xhr.setRequestHeader 'Content-Type', options.contentType
     if options.headers
       xhr.setRequestHeader name, header for name, header of options.headers
              
     options.beforeSend xhr, options if options.beforeSend
     if options.data and options.method is 'POST' or options.method is 'PUT'
       @debug "Sending #{options.data} ..."
-      xhr.setRequestHeader 'Content-Type', 'application/x-www-form-urlencoded'
+      xhr.setRequestHeader 'Content-Type', options.contentType
       xhr.send options.data
     else xhr.send()
     xhr
