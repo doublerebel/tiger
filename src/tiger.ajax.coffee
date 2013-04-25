@@ -1,8 +1,7 @@
 Tiger = @Tiger or require('tiger')
 Model = Tiger.Model
 
-{Pipeliner}  = require 'icedlib'
-{Rendezvous} = require 'iced'
+{Pipeliner}  = require '/lib/icedlib'
 
 
 Ajax =
@@ -10,6 +9,7 @@ Ajax =
     object and object.url?() or object.url
 
   enabled: true
+  
   disable: (callback) ->
     if @enabled
       @enabled = false
@@ -49,7 +49,7 @@ class Base
 
   ajaxQueue: (params, defaults) ->
     xhr = null
-    rv  = new Rendezvous
+    rv  = new iced.Rendezvous
     
     settings     = @ajaxSettings(params, defaults)
     defersuccess = settings.success
