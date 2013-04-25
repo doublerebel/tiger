@@ -234,8 +234,8 @@ class Controller extends Module
       el.set props
     @
   
-  delay: (func, timeout) ->
-    setTimeout @proxy(func), (timeout or 0)
+  delay: (timeout = 0, func) ->
+    setTimeout @proxy(func), timeout
 
 
 # Tiger View Element Event Wrapper
