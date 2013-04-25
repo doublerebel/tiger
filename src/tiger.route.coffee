@@ -78,7 +78,7 @@ class Tiger.Route extends Tiger.Class
     return if @path is path
     @backwards = true if method is 'destroy'
     @path = path
-    @matchRoute(@path)
+    @matchRoute(@path, historic: method is 'destroy')
 
   @matchRoute: (path, options) ->
     for route in @routes
