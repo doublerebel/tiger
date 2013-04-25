@@ -11,9 +11,9 @@ Based on javascript-client-side-sqlite3-wrapper
 http://code.google.com/p/javascript-client-side-sqlite3-wrapper/
 
 
-Tested working on Safari 5525.20.1 (should work in Chrome as well?) 
-and will not work in Firefox cause Gears interface has not been 
-implemented. Only INSERT and FIND are working. 
+Tested working on Safari 5525.20.1 (should work in Chrome as well?)
+and will not work in Firefox cause Gears interface has not been
+implemented. Only INSERT and FIND are working.
 
 USE AS FOLLOW:
 To create a new local database and then a table on the client's machine:
@@ -21,18 +21,18 @@ To create a new local database and then a table on the client's machine:
    storage = LocalStorage('DatabaseName')
    storage.createTable('Phonebook','Name','Number')
 
-Note that TABLES MUST START with a CAPITAL letter. When a table is created, 
-it is automatically mapped as a method/property of the storage that created 
+Note that TABLES MUST START with a CAPITAL letter. When a table is created,
+it is automatically mapped as a method/property of the storage that created
 it. Hence we can write:
 
    storage.Phonebook
 
-To get to that table and perform CRUD operations on it. 
+To get to that table and perform CRUD operations on it.
 
 ------ INSERT ------
 
 INSERTS can take two forms.
- 
+
    storage.Phonebook.insert('Girl Next Door','555-000-001')
 
 Or, the second form allows us to stuff a hash (interchangeably an object in
@@ -48,14 +48,14 @@ Similarly, we could have also declared the object as:
    person = {  Name: "Girl Next Door",
          Number: "555-000-001"   }
 
-Note: NO ERROR CHECKING has currently been implemented, if you spell the 
-field names wrong, or give it too many/few parameters, the operation will 
+Note: NO ERROR CHECKING has currently been implemented, if you spell the
+field names wrong, or give it too many/few parameters, the operation will
 fail silently! (In JS, but Titanium will throw an SQLite error)
 
-Sidenote on allowing this "object form" is that it could be possible 
-to persist arbitrary Javascript objects with the database#without knowing 
-beforehand* their properties since SQLite can add more columns when needed 
-on the fly! 
+Sidenote on allowing this "object form" is that it could be possible
+to persist arbitrary Javascript objects with the database#without knowing
+beforehand* their properties since SQLite can add more columns when needed
+on the fly!
 
 ------ FIND ------
 
@@ -68,30 +68,30 @@ therefore -- like in Rails -- pass #find an array of rowid's:
 
    storage.Phonebook.find([1,2,3,4,5])
 
-The more customary approach is to query using one/multiple conditions 
+The more customary approach is to query using one/multiple conditions
 (e.g. the WHERE SQL expression). To do this we pass #find a hash.
 
    storage.Phonebook.find( { Name:'Girl Next Door',Number:'555' } )
- 
-Here the "contains" clause is implied, as in the field contains the 
-string (e.g. SQLite's#like* keyword). If the column contains numeric 
+
+Here the "contains" clause is implied, as in the field contains the
+string (e.g. SQLite's#like* keyword). If the column contains numeric
 data, then we would query it like this.
 
    storage.Players.find( {Wins:'>10'} )
 
-The conditionals are passed in as strings and plugged into the SQL statement. 
-There are six million things wrong with doing this. Further TO DO's for 
-#find include searching DATETIME and possibly pagination (as in return how 
+The conditionals are passed in as strings and plugged into the SQL statement.
+There are six million things wrong with doing this. Further TO DO's for
+#find include searching DATETIME and possibly pagination (as in return how
 many rows per page and how many pages).
 
 ------- RESTORING ON PAGE RELOAD -------
 
-When the page is reloaded, restoring the mapping of the storage to 
+When the page is reloaded, restoring the mapping of the storage to
 its tables is achieved by calling:
 
    storage.restoreState()
 
-Hence, this statement should almost always be called right after 
+Hence, this statement should almost always be called right after
 the storage is instantiated.
 ###
 
@@ -102,7 +102,7 @@ Model = Tiger.Model
 
 class TigerDB extends Tiger.Class
   @include Tiger.Log
-  
+
   constructor: (dbName) ->
     try
       @debug "Opening Database #{dbName}"
@@ -114,17 +114,17 @@ class TigerDB extends Tiger.Class
   mapTable = (tableName) ->
     @[tableName] = new TigerTable @db, tableName, @executeQuery
     @debug @[tableName].name
-    
+
   mapTables = (row) ->
     if row.name.match /^[A-Z]/ then mapTable row.name
 
   executeQuery: (string, args, callback) ->
     args = (/^[0-9]+\.?[0-9]*$/.exec(arg) and "\"#{String arg}\"" or arg for arg in args)
     @debug "SQL: #{string} | #{args.join()}"
-    
+
     resultSet = @db.execute string, args
     resultArray = []
-    
+
     if resultSet
       while resultSet.isValidRow()
         row = {}
@@ -139,18 +139,18 @@ class TigerDB extends Tiger.Class
         resultArray.push(row)
         resultSet.next()
       resultSet.close()
-    
+
     if callback then callback()
     resultArray
-  
+
   restoreState: ->
     @executeQuery "SELECT name FROM sqlite_master WHERE type='table'", [], mapTables
     @
-  
+
   createTable: (name, columns) ->
     @[name] = new TigerTable @db, name, @executeQuery
     @[name].commit(columns)
-  
+
   destroyTable: (name) ->
     @executeQuery "DROP TABLE IF EXISTS #{name}", [], null
     delete @[name]
@@ -158,7 +158,7 @@ class TigerDB extends Tiger.Class
 
 class TigerTable extends Tiger.Class
   @include Tiger.Log
-  
+
   constructor: (@db = "", @name = "", @executeQuery) ->
 
   commit: (attributes) ->
@@ -172,7 +172,7 @@ class TigerTable extends Tiger.Class
   insert: (args...) ->
     qStr = []
     sendStr = ""
-    
+
     if typeof args[0] is "string" or typeof args[0] is "number"
       qStr.push("?") for i in args
       sendStr = "INSERT OR REPLACE INTO #{@name} VALUES (#{qStr})"
@@ -181,11 +181,11 @@ class TigerTable extends Tiger.Class
       qStr.push("?") for i in args
       sendStr = "INSERT OR REPLACE INTO #{@name} (#{cols}) VALUES (#{qStr})"
     @executeQuery sendStr, args
-  
+
   remove: (args...) ->
     qStr = []
     sendStr = ""
-    
+
     if typeof args[0] is "string" or typeof args[0] is "number"
       qStr.push("?") for i in args
       sendStr = "DELETE FROM #{@name} WHERE ID = (#{qStr})"
@@ -206,13 +206,13 @@ class TigerTable extends Tiger.Class
     else
       args = args[0]
       sendStr = []
-      
+
       for key, val of args
         if val.match(/^[\d\>\<]/)
           sendStr.push "#{key} #{val}"
         else
           sendStr.push "#{key} like '%#{val}%'"
-      
+
       lastStr = "select * from #{@name} where " + sendStr.join(" and ")
       @executeQuery lastStr, []
 
@@ -229,13 +229,13 @@ dbName = Ti.App.name.replace(/[^a-zA-Z0-9]/g,"")
 
 Model.TigerDB =
   db: new TigerDB dbName
-  
+
   install: ->
     @attributes.push("id") unless "id" in @attributes
     @db.createTable @name, @attributes
     @installed = true
     @
-  
+
   uninstall: ->
     @db.destroyTable @name
     @installed = false
@@ -245,7 +245,7 @@ Model.TigerDB =
     Tiger.Log.debug "extending Tiger.DB"
     @change @updateTigerDB
     @fetch @loadTigerDB
-  
+
   updateTigerDB: (record, method) ->
     Tiger.Log.debug "Update DB: #{method}", record.attributes()
     switch method
@@ -255,7 +255,7 @@ Model.TigerDB =
         @db[@name].remove record.id
       else
     @
-  
+
   loadTigerDB: (filter) ->
     Tiger.Log.debug "Loading Database Table #{@name}"
     @install() unless @installed
