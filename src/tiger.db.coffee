@@ -195,25 +195,26 @@ class TigerTable extends Tiger.Class
       sendStr = "DELETE FROM #{@name} WHERE (#{cols}) = (#{qStr})"
     @executeQuery sendStr, args
 
+  all: ->
+    @executeQuery "select * from #{@name}", []
+
   find: (args...) ->
-    if not args.length
-      return @executeQuery "select * from #{@name}", []
+    return @all() unless args.length
+    if Tiger.isArray args[0]
+      sendStr = "select * from #{@name} where id in (#{args[0].join()})"
+      return @executeQuery sendStr, []
     else
-      if Tiger.isArray args[0]
-        sendStr = "select * from #{@name} where id in (#{args[0].join()})"
-        return @executeQuery sendStr, []
-      else
-        args = args[0]
-        sendStr = []
-        
-        for key, val of args
-          if val.match(/^[\d\>\<]/)
-            sendStr.push "#{key} #{val}"
-          else
-            sendStr.push "#{key} like '%#{val}%'"
-        
-        lastStr = "select * from #{@name} where " + sendStr.join(" and ")
-        @executeQuery lastStr, []
+      args = args[0]
+      sendStr = []
+      
+      for key, val of args
+        if val.match(/^[\d\>\<]/)
+          sendStr.push "#{key} #{val}"
+        else
+          sendStr.push "#{key} like '%#{val}%'"
+      
+      lastStr = "select * from #{@name} where " + sendStr.join(" and ")
+      @executeQuery lastStr, []
 
   deconstruct: (obj) ->
     keys = []
@@ -255,10 +256,10 @@ Model.TigerDB =
       else
     @
   
-  loadTigerDB: ->
+  loadTigerDB: (filter) ->
     Tiger.Log.debug "Loading Database Table #{@name}"
     @install() unless @installed
-    result = @db[@name].find()
+    result = if filter then @db[@name].find filter else @db[@name].all()
     if not result then result
     else @refresh result
 
