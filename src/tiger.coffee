@@ -34,7 +34,7 @@ Log = extend {}, Spine.Log,
   stackTraceLimit: 10
   
   log: (args...) ->
-    return unless @trace
+    return unless Tiger.Log.trace
     level = args[0] in logLevels and args.shift()
     level = @logLevel or level or 'info'
     prefix = @logPrefix and @logPrefix + ' ' or ''
@@ -43,8 +43,7 @@ Log = extend {}, Spine.Log,
       else Ti.API.log level, prefix + "#{key}: #{val}" for key, val of obj
     @
 
-  stackTrace: ->
-    err = new Error
+  stackTrace: (err = new Error) ->
     Error.stackTraceLimit = @stackTraceLimit
     Error.prepareStackTrace = (err, stack) -> stack
     Error.captureStackTrace err, arguments.callee
