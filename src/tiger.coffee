@@ -2,10 +2,10 @@
 # A library enhancing Titanium apps with Spine's MVC architecture
 # Uses CoffeeScript's inheritance, and adds jQuery-like chainability
 # Add tiger.db for persistent storage
-# MIT Licensed, Copyright 2011, 2012 Double Rebel
+# MIT Licensed, Copyright 2011 - 2013 Double Rebel
 
 
-Spine  = @Spine or require 'spine'
+Spine = @Spine or require 'spine'
   
 
 # Utilities
@@ -79,7 +79,7 @@ class Ajax extends Module
     beforeSend: null
     complete: ->
     onreadystatechanged: null
-  
+
   @encode: (string) ->
     Ti.Network.encodeURIComponent string
 
@@ -87,7 +87,7 @@ class Ajax extends Module
     return '' unless data?
     params = ("#{@encode(key)}=#{@encode(val)}" for key, val of data)
     params.join '&'
-    
+
   @get: (o) ->
     o.method = 'GET'
     new @ o
