@@ -328,8 +328,8 @@ class Element extends Module
       @removeEventListener(event, arguments.callee)
       fn.apply(@, arguments)
 
-  tiTrigger: (event) ->
-    @element.fireEvent(event)
+  tiTrigger: ->
+    @element.fireEvent.apply(@, arguments)
     @
   
   remove: (el) ->
