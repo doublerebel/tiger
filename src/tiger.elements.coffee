@@ -4,31 +4,42 @@ Element = Tiger.Element
 
 Elements = {}
 elements = [
+  '2DMatrix'
+  # '3DMatrix'
   'ActivityIndicator'
   'AlertDialog'
   'Button'
+  # 'ButtonBar'
+  # 'CoverFlowView'
   # 'DashboardItem'
   # 'DashboardView'
   'EmailDialog'
   'ImageView'
   'Label'
+  'ListItem'
+  'ListSection'
+  'ListView'
+  # 'MaskedImage'
+  # 'Notification' # Android
   'OptionDialog'
-  # 'Picker'
-  # 'PickerColumn'
-  # 'PickerRow'
-  # 'ProgressBar'
-  # 'ScrollableView'
+  'Picker'
+  'PickerColumn'
+  'PickerRow'
+  'ProgressBar'
+  'ScrollableView'
   'ScrollView'
   # 'SearchBar'
   'Slider'
   'Switch'
-  # 'Tab'
-  # 'TabGroup'
+  'Tab'
+  'TabGroup'
+  # 'TabbedBar'
   'TableView'
   'TableViewRow'
   'TableViewSection'
-  # 'TextArea'
+  'TextArea'
   'TextField'
+  # 'Toolbar'
   'View'
   'WebView'
   'Window'
@@ -37,7 +48,7 @@ elements = [
 for element in elements
   class Elements[element] extends Element
     elementName: element
-    
+
 Tiger[element] = Elements[element] for element in elements
 
 
