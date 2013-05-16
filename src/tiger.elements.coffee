@@ -132,10 +132,11 @@ Tiger.TableView.include
     @element.appendSection (section.element or section) for section in sections
     @
 
-Tiger.TableViewRow.extend
-  constructor: (props) ->
-    props = Tiger.extend className: 'GUID' + Spine.guid().slice(-12), props
-    super props
+# Cannot call super outside of instance method.
+# Tiger.TableViewRow.extend
+#   constructor: (props) ->
+#     props = Tiger.extend className: 'GUID' + Spine.guid().slice(-12), props
+#     super props
 
 
 module?.exports = Elements
