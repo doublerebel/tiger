@@ -45,6 +45,53 @@ elements = [
   'Window'
 ]
 
+
+## Fix for static analysis during ios compilation.
+## To save space in packaged app, comment out unused elements.
+## https://gist.github.com/tzmartin/1372475
+##
+if Ti.Platform.osname isnt "android"
+  Ti.UI.create2DMatrix();
+  # Ti.UI.create3DMatrix();
+  Ti.UI.createActivityIndicator();
+  Ti.UI.createAlertDialog();
+  Ti.UI.createButton();
+  # Ti.UI.createButtonBar();
+  # Ti.UI.createCoverFlowView();
+  # Ti.UI.createDashboardItem();
+  # Ti.UI.createDashboardView();
+  Ti.UI.createEmailDialog();
+  Ti.UI.createImageView();
+  Ti.UI.createLabel();
+  Ti.UI.createListItem();
+  Ti.UI.createListSection();
+  Ti.UI.createListView();
+  # Ti.UI.createMaskedImage();
+  # Ti.UI.createNotification(); # Android
+  Ti.UI.createOptionDialog();
+  Ti.UI.createPicker();
+  Ti.UI.createPickerColumn();
+  Ti.UI.createPickerRow();
+  Ti.UI.createProgressBar();
+  Ti.UI.createScrollableView();
+  Ti.UI.createScrollView();
+  # Ti.UI.createSearchBar();
+  Ti.UI.createSlider();
+  Ti.UI.createSwitch();
+  Ti.UI.createTab();
+  Ti.UI.createTabGroup();
+  # Ti.UI.createTabbedBar();
+  Ti.UI.createTableView();
+  Ti.UI.createTableViewRow();
+  Ti.UI.createTableViewSection();
+  Ti.UI.createTextArea();
+  Ti.UI.createTextField();
+  # Ti.UI.createToolbar();
+  Ti.UI.createView();
+  Ti.UI.createWebView();
+  Ti.UI.createWindow();
+
+
 for element in elements
   class Elements[element] extends Element
     elementName: element
