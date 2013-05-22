@@ -1,4 +1,4 @@
-Tiger = @Tiger or require 'tiger'
+Tiger = @Tiger or require './tiger'
 
 
 namedParam   = /:([\w\d]+)/g

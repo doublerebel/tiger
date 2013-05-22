@@ -1,4 +1,4 @@
-Tiger   = @Tiger or require('tiger')
+Tiger   = @Tiger or require('./tiger')
 isArray = Tiger.isArray
 
 

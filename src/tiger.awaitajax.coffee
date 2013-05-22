@@ -1,4 +1,4 @@
-Tiger = require '/lib/tiger'
+Tiger = @Tiger or require './tiger'
 
 
 awaitAjax =

@@ -96,7 +96,7 @@ the storage is instantiated.
 ###
 
 
-Tiger = @Tiger or require 'tiger'
+Tiger = @Tiger or require './tiger'
 Model = Tiger.Model
 
 

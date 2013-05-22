@@ -5,7 +5,7 @@
 # MIT Licensed, Copyright 2011 - 2013 Double Rebel
 
 
-Spine = @Spine or require 'spine'
+Spine = @Spine or require './spine'
 
 
 # Utilities
