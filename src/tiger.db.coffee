@@ -126,9 +126,10 @@ class TigerDB extends Tiger.Class
     resultArray = []
 
     if resultSet
+      fields = if Ti.Platform.osname is 'android' then resultSet.fieldCount else resultSet.fieldCount()
       while resultSet.isValidRow()
         row = {}
-        for i in [0..resultSet.fieldCount-1]
+        for i in [0..fields-1]
           rawValue = resultSet.field(i)
           try
             value = JSON.parse rawValue
