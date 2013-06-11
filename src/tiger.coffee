@@ -173,9 +173,12 @@ class Controller extends Module
   @include Spine.Events
   @include Log
 
+  eventSplitter: /^(\w+)\s*(.*)$/
+
   constructor: (@options = {}) ->
     @[key] = val for key, val of @options
     @_map = {}
+    @_events = {}
 
     @elements or= @constructor.elements
     @refreshElements() if @elements
@@ -204,17 +207,31 @@ class Controller extends Module
 
   delegateEvents: ->
     for key, methodName of @events
-      method    = @proxy @[methodName]
-      match     = key.match /^(\w+)\s*(.*)$/
+      @_events[key] = @proxy @[methodName]
+      match         = key.match @eventSplitter
+      eventName     = match[1]
+      selector      = match[2]
+
+      @debug "Binding #{selector} #{eventName}..."
+      if selector is '' then @view.tiBind eventName, @_events[key]
+      else
+        el = @mapSelector selector
+        el.tiBind eventName, @_events[key]
+    @
+
+  release: (key) =>
+    unless key
+      @trigger 'release'
+      @view.remove()
+      @unbind()
+
+    else
+      match     = key.match @eventSplitter
       eventName = match[1]
       selector  = match[2]
 
-      @debug "Binding #{selector} #{eventName}..."
-      if selector is '' then @view.tiBind eventName, method
-      else
-        el = @mapSelector selector
-        el.tiBind eventName, method
-    @
+      el = if selector then (@mapSelector selector) else @view
+      el.tiUnbind eventName, @_events[key]
 
   bindSynced: ->
     for field, selector of @map
