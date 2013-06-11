@@ -129,8 +129,13 @@ class Ajax extends Module
       options.error xhr, xhr.statusText, error
       options.complete xhr, xhr.statusText
     xhr.onload = ->
-      options.success (xhr.responseXML or xhr.responseText), xhr.statusText, xhr
+      try
+        response = xhr.responseXML
+      catch e
+        response = xhr.responseText
+      options.success response, xhr.statusText, xhr
       options.complete xhr, xhr.statusText
+
     _debug = @proxy @debug
     xhr.onreadystatechanged = options.onreadystatechanged or ->
       switch @readyState
