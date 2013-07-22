@@ -351,7 +351,7 @@ class Element extends Module
       fn.apply(@, arguments)
 
   tiTrigger: ->
-    @element.fireEvent.apply(@, arguments)
+    @element.fireEvent.apply(@element, arguments)
     @
 
   remove: (el) ->
