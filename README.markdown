@@ -1,4 +1,4 @@
-### **Tiger** 0.1.3 by Charles Phillips
+### **Tiger** 0.2.1 by Charles Phillips
 
 **TigerJS** is an expanded port of the popular single-page webapp framework, [SpineJS](https://github.com/spine/spine).  *(Spine is similar to Backbone, although I find it to be more simple, and therefore more flexible and more powerful.)*  Rather than "reinventing the wheel", **TigerJS** builds on production-ready, battle-tested code that has launched countless apps across tech.
 

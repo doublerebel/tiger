@@ -1,6 +1,6 @@
 {
   "name": "tiger",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A full port of Spine.js MVC framework to Titanium Mobile, with enhancements",
   "main": "./lib/tiger.js",
   "scripts": {

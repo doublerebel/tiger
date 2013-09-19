@@ -1,4 +1,4 @@
-# Tiger 0.1.4 by Charles Phillips <charles@doublerebel.com>
+# Tiger 0.2.1 by Charles Phillips <charles@doublerebel.com>
 # A library enhancing Titanium apps with Spine's MVC architecture
 # Uses CoffeeScript's inheritance, and adds jQuery-like chainability
 # Add tiger.db for persistent storage
@@ -385,7 +385,7 @@ class Element extends Module
 Tiger = @Tiger   = {}
 module?.exports  = Tiger
 
-Tiger.version    = '0.1.4'
+Tiger.version    = '0.2.1'
 Tiger.extend     = extend
 Tiger.makeArray  = makeArray
 Tiger.isArray    = Spine.isArray
