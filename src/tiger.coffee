@@ -132,7 +132,7 @@ class Ajax extends Module
       try
         response = xhr.responseXML
       catch e
-        response = xhr.responseText
+      response = xhr.responseText unless response
       options.success response, xhr.statusText, xhr
       options.complete xhr, xhr.statusText
 
